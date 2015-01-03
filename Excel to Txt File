@@ -1,0 +1,78 @@
+from xlrd import open_workbook, empty_cell
+from itertools import takewhile
+
+def column_len(sheet, index):
+    col_values = sheet.col_values(index)
+    col_len = len(col_values)
+    for _ in takewhile(lambda x: not x, reversed(col_values)):
+        col_len -= 1
+    return col_len
+
+answer = raw_input("Pilesort, namingwithlabels, or namingwithoutlabels? ")
+if answer == "pilesort":
+	sheet_index = raw_input("Enter Subject number: ")
+	txtfile = raw_input("Enter txt file to be written: ")
+
+	pilesortdata = open_workbook('pilesortdata.xlsx')
+	pilesheet = pilesortdata.sheet_by_index(int(sheet_index))
+
+	file = open(txtfile, 'w')
+	file.seek(0)
+	masterpiles = []
+	for x in range(pilesheet.ncols):
+		piles =[]
+		for i in range(column_len(pilesheet, x)):
+			piles.append(int(pilesheet.cell(i, x).value))
+		masterpiles.append(piles)
+	for i in masterpiles:
+		file.write(' '.join(map(str, i)) + "\n")
+	file.close()
+if answer == "namingwithlabels":
+	sheet_index = raw_input("Enter Subject number: ")
+	txtfile = raw_input("Enter txt file to be written: ")
+
+	namingdata = open_workbook('namingbestex.xlsx')
+	namingsheet = namingdata.sheet_by_index(int(sheet_index))
+
+	termdict = {}
+	keys = []
+	for x in range(1, column_len(namingsheet, 2)):
+		termlist = str(namingsheet.cell(x, 2)).split()
+		term = ""
+		for i in range(0, len(termlist)):
+			if i % 2 != 0:
+				term = term + " " + termlist[i]
+		term = term.strip().replace("'", "")
+		if term not in keys:
+			keys.append(term)
+			termdict[term] = [int(namingsheet.cell(x, 0).value)]
+		else:
+			termdict[term].append(int(namingsheet.cell(x, 0).value))
+	
+	file = open(txtfile, 'w')
+	file.seek(0)
+	for key in termdict:
+		file.write(key + " " + ' '.join(map(str, termdict[key])) + "\n")
+	file.close()
+if answer == "namingwithoutlabels":
+	sheet_index = raw_input("Enter Subject number: ")
+	txtfile = raw_input("Enter txt file to be written: ")
+
+	namingdata = open_workbook('namingbestex.xlsx')
+	namingsheet = namingdata.sheet_by_index(int(sheet_index))
+
+	termdict = {}
+	keys = []
+	for x in range(1, column_len(namingsheet, 2)):
+		term = str(namingsheet.cell(x, 2))
+		if term not in keys:
+			keys.append(term)
+			termdict[term] = [int(namingsheet.cell(x, 0).value)]
+		else:
+			termdict[term].append(int(namingsheet.cell(x, 0).value))
+	
+	file = open(txtfile, 'w')
+	file.seek(0)
+	for key in termdict:
+		file.write(' '.join(map(str, termdict[key])) + "\n")
+	file.close()
